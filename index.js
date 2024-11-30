@@ -4,8 +4,6 @@ import simpleGit from 'simple-git';
 
 const path = './data.json';
 const git = simpleGit();
-
-// List tanggal-tanggal buat commit
 const dates = [
   '2024-04-02',
   '2024-04-03',
@@ -92,24 +90,31 @@ const dates = [
 ];
 
 async function generateCommits() {
-  for (const date of dates) {
-    const formattedDate = moment(date).format(); // Format ke ISO
+  try {
+    for (const date of dates) {
+      const formattedDate = moment(date).toISOString(); // Format ISO 8601
 
-    // Update isi file biar ada perubahan
-    const data = { date: formattedDate };
-    await jsonfile.writeFile(path, data);
+      // Update file untuk memastikan ada perubahan
+      const data = { date: formattedDate };
+      await jsonfile.writeFile(path, data);
 
-    // Add, commit, dan set tanggal author & committer
-    await git.add([path]);
-    await git.commit(`Commit on ${formattedDate}`, undefined, {
-      '--date': formattedDate, // Set tanggal
-    });
+      console.log(`Updated file with date: ${formattedDate}`);
 
-    console.log(`Commit created for ${formattedDate}`);
+      // Add file, commit, dan set tanggal commit
+      await git.add([path]);
+      await git.commit(`Commit on ${formattedDate}`, undefined, {
+        '--date': formattedDate, // Set author date dan committer date
+      });
+
+      console.log(`Commit created for ${formattedDate}`);
+    }
+
+    // Push ke branch utama setelah selesai
+    await git.push('origin', 'main');
+    console.log('All commits pushed to remote!');
+  } catch (error) {
+    console.error('Error generating commits:', error);
   }
-
-  // Push setelah semua commit dibuat
-  await git.push('origin', 'main');
 }
 
-generateCommits().catch((err) => console.error(err));
+generateCommits();
